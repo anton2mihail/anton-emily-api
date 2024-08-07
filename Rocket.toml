@@ -1,0 +1,13 @@
+[default]
+address = "127.0.0.1"
+port = 8000
+ident = "Rocket"
+log_level = "normal"
+temp_dir = "/tmp"
+secret_key = "ScjCnQs6pVHNieTlSge918Szl7MJkA8JHFfaGly4A40="
+
+[default.limits]
+form = "64 kB"
+json = "1 MiB"
+msgpack = "2 MiB"
+"file/jpg" = "5 MiB"
