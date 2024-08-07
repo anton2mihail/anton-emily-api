@@ -6,8 +6,16 @@ use std::sync::Mutex;
 use serde::Deserialize;
 use serde::Serialize;
 
-pub fn create_guest(first_name: String, last_name: String, email: String, phone_number: String) -> Result<()> {
-    let conn = Connection::open("antonEmily.db")?;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Guest {
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub phone_number: String,
+}
+
+pub fn create_guest(db: &State<Mutex<Connection>>, new_guest: Guest) -> Result<()> {
+    let conn = db.lock().expect("shared state lock");
 
     let rand_string: String = thread_rng()
         .sample_iter(&Alphanumeric)
@@ -15,11 +23,13 @@ pub fn create_guest(first_name: String, last_name: String, email: String, phone_
         .map(char::from)
         .collect();
 
-    conn.execute(
+    match conn.execute(
         "INSERT INTO guest (first_name, last_name, email, phone_number, invite_sent, given_password, invite_accepted) values (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        [first_name.to_string(), last_name.to_string(), email.to_string(), phone_number.to_string(), false.to_string(), rand_string.to_string(), false.to_string()],
-    )?;
-
+        [new_guest.first_name.to_string(), new_guest.last_name.to_string(), new_guest.email.to_string(), new_guest.phone_number.to_string(), false.to_string(), rand_string.to_string(), false.to_string()],
+    ) {
+        Ok(updated) => println!("{} rows were updated", updated),
+        Err(err) => println!("insert into guest failed: {}", err),
+    }
 
     Ok(())
 }

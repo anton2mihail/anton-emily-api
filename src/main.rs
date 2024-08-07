@@ -19,6 +19,34 @@ fn index() -> (Status, &'static str) {
     (Status::Ok, "ok!")
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct GuestCreateData<'r> {
+    first_name: &'r str,
+    last_name: &'r str,
+    email: &'r str,
+    phone_number: &'r str,
+}
+
+#[post("/guest", data = "<payload>")]
+fn create_guest(payload: Json<GuestCreateData<'_>>, db: &State<Mutex<Connection>>) -> (Status, &'static str) {
+
+    let guest = crud::Guest {
+        first_name: payload.first_name.to_string(),
+        last_name: payload.last_name.to_string(),
+        email: payload.email.to_string(),
+        phone_number: payload.phone_number.to_string(),
+    };
+
+    let result = crud::create_guest(db, guest);
+
+    if result.is_err() {
+        return (Status::InternalServerError, "Error creating guest");
+    }
+
+    (Status::Ok, "ok!")
+}
+
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -70,5 +98,6 @@ fn rocket() -> _ {
         .mount("/", routes![login])
         .mount("/", routes![users])
         .mount("/", routes![logout])
+        .mount("/", routes![create_guest])
         .manage(Mutex::new(conn))
 }
